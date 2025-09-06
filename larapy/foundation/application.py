@@ -42,9 +42,11 @@ class Application(Container):
         """Register all of the base service providers"""
         from ..providers.routing_service_provider import RoutingServiceProvider
         from ..providers.config_service_provider import ConfigServiceProvider
+        from ..providers.auth_service_provider import AuthServiceProvider
         
         self.register(ConfigServiceProvider(self))
         self.register(RoutingServiceProvider(self))
+        self.register(AuthServiceProvider(self))
     
     def register(self, provider: ServiceProvider):
         """Register a service provider"""
