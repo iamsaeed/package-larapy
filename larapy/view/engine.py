@@ -6,6 +6,7 @@ from flask import render_template, current_app
 from typing import Dict, Any
 import os
 from datetime import datetime
+from .jinja import setup_larapy_jinja
 
 class ViewEngine:
     """Laravel-style view engine using Jinja2"""
@@ -20,6 +21,9 @@ class ViewEngine:
         # Set template folder
         template_folder = os.path.join(app.root_path, 'resources', 'views')
         app.template_folder = template_folder
+        
+        # Setup Larapy Jinja2 extensions (auth, guest, csrf, etc.)
+        setup_larapy_jinja(app)
         
         # Register global template functions
         app.jinja_env.globals['current_year'] = datetime.now().year
