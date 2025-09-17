@@ -44,6 +44,13 @@ class ValidatesRequests:
         except ValidationException as e:
             e.error_bag = error_bag
             raise e
+    
+    def validateWithBag(self, error_bag: str, request_data: Dict[str, Any],
+                        rules: Dict[str, Union[str, List]],
+                        messages: Optional[Dict[str, str]] = None,
+                        attributes: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+        """Validate the request with a named error bag (Laravel camelCase)"""
+        return self.validate_with_bag(error_bag, request_data, rules, messages, attributes)
 
     def _get_request_data(self) -> Dict[str, Any]:
         """Get data from the current request"""

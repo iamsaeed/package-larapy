@@ -188,3 +188,64 @@ def setup_larapy_jinja(app):
             return Markup('\n'.join(tags))
 
         app.jinja_env.globals['vite'] = vite_fallback
+
+        # Add Laravel-style error handling and old input support
+        from ..validation.view_error_bag import ViewErrorBag
+        from ..session.store import session_manager
+        from flask import g
+        
+        def get_errors():
+            """Get the errors ViewErrorBag for templates."""
+            # Check if errors are available in Flask's g object
+            if hasattr(g, 'errors'):
+                return g.errors
+            
+            # Check if errors are in view_data
+            if hasattr(g, 'view_data') and 'errors' in g.view_data:
+                return g.view_data['errors']
+            
+            # Return empty ViewErrorBag
+            return ViewErrorBag()
+        
+        def get_old_input(key=None, default=None):
+            """Get old input value for templates."""
+            return session_manager.getOldInput(key, default)
+        
+        def get_session_value(key=None, default=None):
+            """Get session value for templates."""
+            if key is None:
+                return session_manager
+            return session_manager.get(key, default)
+        
+        def get_field_error(field, bag='default'):
+            """Get first error for a specific field."""
+            errors = get_errors()
+            return errors.getBag(bag).first(field)
+        
+        def has_field_error(field, bag='default'):
+            """Check if a field has errors."""
+            errors = get_errors()
+            return errors.getBag(bag).has(field)
+        
+        def get_error_class(field, error_class='error', bag='default'):
+            """Get CSS class if field has errors."""
+            if has_field_error(field, bag):
+                return error_class
+            return ''
+        
+        # Add Laravel-style global functions
+        app.jinja_env.globals.update({
+            'errors': get_errors,
+            'old': get_old_input,
+            'session': get_session_value,
+            'error': get_field_error,
+            'has_error': has_field_error,
+            'error_class': get_error_class,
+        })
+        
+        # Add template filters
+        app.jinja_env.filters.update({
+            'old': lambda field, default='': get_old_input(field, default),
+            'error_first': lambda field, bag='default': get_field_error(field, bag) or '',
+            'error_all': lambda field, bag='default': get_errors().getBag(bag).get(field),
+        })

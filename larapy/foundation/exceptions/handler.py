@@ -1,9 +1,12 @@
 """Global exception handler for Larapy applications"""
 
 import traceback
-from flask import jsonify, render_template, request
+from flask import jsonify, render_template, request, session
 from werkzeug.exceptions import HTTPException
-from typing import Optional
+from typing import Optional, Union, Dict, Any
+from ...validation.exceptions import ValidationException
+from ...validation.view_error_bag import ViewErrorBag
+from ...http.middleware.share_errors_from_session import ShareErrorsFromSession
 
 class ExceptionHandler:
     """Global exception handler for Larapy applications"""
@@ -20,6 +23,10 @@ class ExceptionHandler:
 
     def handle(self, error):
         """Handle all exceptions"""
+        # Special handling for validation exceptions
+        if isinstance(error, ValidationException):
+            return self.convertValidationExceptionToResponse(error)
+        
         # Log the error
         self.report(error)
 
@@ -62,6 +69,146 @@ class ExceptionHandler:
             'NotFound',  # Werkzeug's 404
         ]
         return type(error).__name__ not in dont_report
+
+    def convertValidationExceptionToResponse(self, exception: ValidationException):
+        """
+        Convert ValidationException to appropriate response.
+        
+        Args:
+            exception: The validation exception to handle
+            
+        Returns:
+            Response: Appropriate redirect or JSON response
+        """
+        # Check if request wants JSON response
+        if self.expects_json_for_validation():
+            return self._convert_validation_to_json_response(exception)
+        else:
+            return self._convert_validation_to_redirect_response(exception)
+    
+    def convert_validation_exception_to_response(self, exception: ValidationException):
+        """Python snake_case alias for convertValidationExceptionToResponse."""
+        return self.convertValidationExceptionToResponse(exception)
+    
+    def expects_json_for_validation(self) -> bool:
+        """Check if request expects JSON response for validation errors."""
+        if not request:
+            return False
+        
+        # Check Accept header
+        if 'application/json' in request.headers.get('Accept', ''):
+            return True
+        
+        # Check if it's an AJAX request
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return True
+        
+        # Check if request content type is JSON
+        if request.content_type and 'application/json' in request.content_type:
+            return True
+        
+        # Check if request is made to API routes
+        if request.path.startswith('/api/'):
+            return True
+            
+        return False
+    
+    def _convert_validation_to_json_response(self, exception: ValidationException):
+        """Convert ValidationException to JSON response for API/AJAX requests."""
+        response_data = {
+            'message': str(exception),
+            'errors': exception.errors
+        }
+        
+        # Add error bag information if not default
+        if exception.error_bag != 'default':
+            response_data['error_bag'] = exception.error_bag
+        
+        return jsonify(response_data), exception.status
+    
+    def _convert_validation_to_redirect_response(self, exception: ValidationException):
+        """Convert ValidationException to redirect response for web requests."""
+        from ...http.response_factory import ResponseFactory
+        
+        # Get response factory
+        response_factory = ResponseFactory()
+        
+        # Determine redirect URL
+        redirect_url = self._get_validation_redirect_url(exception)
+        
+        # Flash errors to session
+        self._flash_validation_errors_to_session(exception)
+        
+        # Flash input if specified
+        if exception._with_input is not None:
+            self._flash_input_to_session(exception._with_input)
+        else:
+            # Flash current request input by default
+            self._flash_current_input_to_session()
+        
+        # Create redirect response
+        from werkzeug.utils import redirect
+        return redirect(redirect_url, code=302)
+    
+    def _get_validation_redirect_url(self, exception: ValidationException) -> str:
+        """Get the URL to redirect to for validation errors."""
+        # Use explicit redirectTo if set
+        if exception.redirect_to:
+            return exception.redirect_to
+        
+        # Use referer header (previous page)
+        referer = request.headers.get('Referer')
+        if referer:
+            return referer
+        
+        # Fallback to root
+        return '/'
+    
+    def _flash_validation_errors_to_session(self, exception: ValidationException):
+        """Flash validation errors to session."""
+        # Create ViewErrorBag with the errors
+        error_bag = ViewErrorBag()
+        error_bag.put(exception.error_bag, exception.errors)
+        
+        # Flash to session
+        ShareErrorsFromSession.flash_errors_to_session(error_bag)
+    
+    def _flash_input_to_session(self, input_data: Dict[str, Any]):
+        """Flash input data to session."""
+        # Remove sensitive data
+        safe_input = self._remove_sensitive_data(input_data)
+        session['_old_input'] = safe_input
+    
+    def _flash_current_input_to_session(self):
+        """Flash current request input to session."""
+        input_data = {}
+        
+        # Get form data
+        if request.form:
+            input_data.update(request.form.to_dict())
+        
+        # Get JSON data
+        if request.json:
+            input_data.update(request.json)
+        
+        # Get query parameters
+        if request.args:
+            input_data.update(request.args.to_dict())
+        
+        # Flash the input
+        if input_data:
+            self._flash_input_to_session(input_data)
+    
+    def _remove_sensitive_data(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Remove sensitive data from input before flashing."""
+        sensitive_keys = [
+            'password', 'password_confirmation', 'current_password',
+            'new_password', 'new_password_confirmation', '_token',
+            'csrf_token', '_method', 'token', 'api_token',
+            'access_token', 'refresh_token', 'secret', 'key'
+        ]
+        
+        return {k: v for k, v in input_data.items() if k not in sensitive_keys}
 
     def render(self, error):
         """Render error response"""

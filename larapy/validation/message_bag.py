@@ -101,6 +101,16 @@ class MessageBag(MessageBagContract):
         """Check if the message bag is empty"""
         return self.count() == 0
 
+    def any(self) -> bool:
+        """
+        Check if the message bag has any messages.
+        Laravel-compatible alias for has().
+        
+        Returns:
+            bool: True if bag has any messages
+        """
+        return self.has()
+
     def keys(self) -> List[str]:
         """Get all the keys in the message bag"""
         return list(self.messages.keys())

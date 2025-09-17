@@ -265,3 +265,306 @@ def retry(max_attempts: int = 3, delay: float = 1.0):
             
         return wrapper
     return decorator
+
+
+# Response Helper Functions
+
+def response(content: Any = '', status: int = 200, headers: Optional[Dict] = None):
+    """
+    Create a response or return ResponseFactory for chaining.
+    
+    Args:
+        content: Response content (if None, returns factory for chaining)
+        status: HTTP status code
+        headers: Response headers
+        
+    Returns:
+        Response object or ResponseFactory for chaining
+    """
+    from ..http.response_factory import ResponseFactory
+    
+    # If no arguments provided, return factory for Laravel-style chaining
+    if content == '' and status == 200 and headers is None:
+        return ResponseFactory()
+    
+    # Otherwise create response directly
+    factory = ResponseFactory()
+    return factory.make_response(content, status, headers)
+
+
+def json_response(data: Any = None, status: int = 200, headers: Optional[Dict] = None, options: int = 0):
+    """
+    Create a JSON response.
+    
+    Args:
+        data: Data to encode as JSON
+        status: HTTP status code
+        headers: Response headers
+        options: JSON encoding options
+        
+    Returns:
+        JsonResponse object
+    """
+    from ..http.json_response import JsonResponse
+    return JsonResponse(data, status, headers, options)
+
+
+def redirect(to: Optional[str] = None, status: int = 302, headers: Optional[Dict] = None, secure: Optional[bool] = None):
+    """
+    Create a redirect response.
+    
+    Args:
+        to: URL to redirect to
+        status: HTTP status code
+        headers: Response headers
+        secure: Whether to use HTTPS
+        
+    Returns:
+        RedirectResponse object
+    """
+    from ..routing.redirector import Redirector
+    redirector = Redirector()
+    
+    if to is None:
+        return redirector.back(status, headers)
+    
+    return redirector.to(to, status, headers, secure)
+
+
+def back(status: int = 302, headers: Optional[Dict] = None, fallback: str = '/'):
+    """
+    Create a redirect back to previous page.
+    
+    Args:
+        status: HTTP status code
+        headers: Response headers
+        fallback: Fallback URL if no previous page
+        
+    Returns:
+        RedirectResponse object
+    """
+    from ..routing.redirector import Redirector
+    redirector = Redirector()
+    return redirector.back(status, headers, fallback)
+
+
+def view(template: str, data: Optional[Dict] = None, status: int = 200, headers: Optional[Dict] = None):
+    """
+    Create a view response.
+    
+    Args:
+        template: Template name
+        data: Data to pass to template
+        status: HTTP status code
+        headers: Response headers
+        
+    Returns:
+        Response object with rendered view
+    """
+    from ..http.response import Response
+    return Response.view(template, data, status, headers)
+
+
+def old(key: Optional[str] = None, default: Any = None):
+    """
+    Get old input data from session.
+    
+    Args:
+        key: Input key to retrieve
+        default: Default value if key not found
+        
+    Returns:
+        Old input value or all old input
+    """
+    from flask import session
+    
+    old_input = session.get('_old_input', {})
+    
+    if key is None:
+        return old_input
+    
+    return old_input.get(key, default)
+
+
+def url(path: Optional[str] = None, parameters: Optional[Dict] = None, secure: Optional[bool] = None):
+    """
+    Generate a URL.
+    
+    Args:
+        path: URL path
+        parameters: URL parameters
+        secure: Whether to use HTTPS
+        
+    Returns:
+        Generated URL
+    """
+    from flask import request, url_for
+    
+    if path is None:
+        path = '/'
+    
+    # If path starts with http/https, return as-is
+    if path.startswith(('http://', 'https://')):
+        return path
+    
+    # Build URL
+    base_url = request.host_url if request else 'http://localhost'
+    
+    if secure is True:
+        base_url = base_url.replace('http://', 'https://')
+    elif secure is False:
+        base_url = base_url.replace('https://', 'http://')
+    
+    if path.startswith('/'):
+        url = base_url.rstrip('/') + path
+    else:
+        url = base_url.rstrip('/') + '/' + path
+    
+    # Add parameters if provided
+    if parameters:
+        from urllib.parse import urlencode
+        url += '?' + urlencode(parameters)
+    
+    return url
+
+
+def route(name: str, parameters: Optional[Dict] = None, absolute: bool = True):
+    """
+    Generate a URL for a named route.
+    
+    Args:
+        name: Route name
+        parameters: Route parameters
+        absolute: Whether to generate absolute URL
+        
+    Returns:
+        Generated URL
+    """
+    from flask import url_for
+    
+    try:
+        if parameters:
+            return url_for(name, _external=absolute, **parameters)
+        else:
+            return url_for(name, _external=absolute)
+    except:
+        # Fallback if route not found
+        return '/' if not absolute else url('/')
+
+
+def asset(path: str, secure: Optional[bool] = None):
+    """
+    Generate a URL for an asset.
+    
+    Args:
+        path: Asset path
+        secure: Whether to use HTTPS
+        
+    Returns:
+        Asset URL
+    """
+    return url(f'/assets/{path.lstrip("/")}', secure=secure)
+
+
+def request_helper(key: Optional[str] = None, default: Any = None):
+    """
+    Get request data.
+    
+    Args:
+        key: Request key to retrieve
+        default: Default value if key not found
+        
+    Returns:
+        Request value or all request data
+    """
+    from flask import request
+    
+    if not request:
+        return default if key else {}
+    
+    # Get data from various sources
+    data = {}
+    
+    # Form data
+    if hasattr(request, 'form'):
+        data.update(request.form.to_dict())
+    
+    # JSON data
+    if hasattr(request, 'json') and request.json:
+        data.update(request.json)
+    
+    # Query parameters
+    if hasattr(request, 'args'):
+        data.update(request.args.to_dict())
+    
+    if key is None:
+        return data
+    
+    return data.get(key, default)
+
+
+def session_helper(key: Optional[str] = None, default: Any = None):
+    """
+    Get or set session data.
+    
+    Args:
+        key: Session key
+        default: Default value if key not found
+        
+    Returns:
+        Session value or all session data
+    """
+    from flask import session
+    
+    if key is None:
+        return dict(session)
+    
+    return session.get(key, default)
+
+
+def flash(key: str, value: Any):
+    """
+    Flash data to session.
+    
+    Args:
+        key: Flash key
+        value: Flash value
+    """
+    from flask import session
+    session[f'_flash.{key}'] = value
+
+
+def get_flashed(key: str, default: Any = None):
+    """
+    Get flashed data and remove from session.
+    
+    Args:
+        key: Flash key
+        default: Default value if key not found
+        
+    Returns:
+        Flashed value
+    """
+    from flask import session
+    return session.pop(f'_flash.{key}', default)
+
+
+def csrf_token():
+    """
+    Get CSRF token.
+    
+    Returns:
+        CSRF token string
+    """
+    from flask import session
+    import secrets
+    
+    if '_csrf_token' not in session:
+        session['_csrf_token'] = secrets.token_hex(16)
+    
+    return session['_csrf_token']
+
+
+# Laravel helper aliases for compatibility
+request = request_helper  # Laravel uses 'request()' not 'request_helper()'
+session = session_helper  # Laravel uses 'session()' not 'session_helper()'

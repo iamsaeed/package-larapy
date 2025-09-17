@@ -26,13 +26,13 @@ class Validator(ValidatorContract):
         self.valid_data: Dict[str, Any] = {}
         self.after_callbacks: List[Callable] = []
 
-        # Parse rules
-        self.rules = self._parse_rules(rules)
-
         # Custom rule extensions
         self.extensions: Dict[str, Callable] = {}
         self.implicit_extensions: Dict[str, Callable] = {}
         self.replacers: Dict[str, Callable] = {}
+
+        # Parse rules
+        self.rules = self._parse_rules(rules)
 
         # Default validation messages
         self.default_messages = self._get_default_messages()
@@ -283,6 +283,13 @@ class Validator(ValidatorContract):
             'size': 'Size',
             'confirmed': 'ConfirmedRule',
             'required_if': 'RequiredIfRule',
+            'required_with': 'RequiredWithRule',
+            'required_without': 'RequiredWithoutRule',
+            'required_unless': 'RequiredUnlessRule',
+            'exists': 'ExistsRule',
+            'unique': 'UniqueRule',
+            'file': 'FileRule',
+            'image': 'ImageRule',
             'same': 'SameRule',
             'different': 'DifferentRule',
             'alpha': 'AlphaRule',
@@ -293,7 +300,14 @@ class Validator(ValidatorContract):
 
         if rule_name in rule_map:
             try:
-                module_name = f"larapy.validation.rules.{rule_name}" if rule_name not in ['in', 'not_in'] else f"larapy.validation.rules.{rule_name}_rule" if rule_name == 'in' else "larapy.validation.rules.not_in"
+                # Handle special cases for module naming
+                if rule_name == 'in':
+                    module_name = "larapy.validation.rules.in_rule"
+                elif rule_name == 'not_in':
+                    module_name = "larapy.validation.rules.not_in"
+                else:
+                    module_name = f"larapy.validation.rules.{rule_name}"
+                
                 module = __import__(module_name, fromlist=[rule_map[rule_name]])
                 return getattr(module, rule_map[rule_name])
             except (ImportError, AttributeError):
@@ -326,6 +340,32 @@ class Validator(ValidatorContract):
                 elif parameters:
                     return rule_class(parameters[0], None)
                 return rule_class('', None)
+            elif rule_class.__name__ == 'RequiredWithRule':
+                if parameters:
+                    return rule_class(parameters)
+                return rule_class([])
+            elif rule_class.__name__ == 'RequiredWithoutRule':
+                if parameters:
+                    return rule_class(parameters)
+                return rule_class([])
+            elif rule_class.__name__ == 'RequiredUnlessRule':
+                if len(parameters) >= 2:
+                    return rule_class(parameters[0], parameters[1])
+                elif parameters:
+                    return rule_class(parameters[0], None)
+                return rule_class('', None)
+            elif rule_class.__name__ == 'ExistsRule':
+                if len(parameters) >= 2:
+                    return rule_class(parameters[0], parameters[1])
+                elif parameters:
+                    return rule_class(parameters[0])
+                return rule_class('table')
+            elif rule_class.__name__ == 'UniqueRule':
+                if len(parameters) >= 2:
+                    return rule_class(parameters[0], parameters[1])
+                elif parameters:
+                    return rule_class(parameters[0])
+                return rule_class('table')
             elif rule_class.__name__ in ['SameRule', 'DifferentRule']:
                 if parameters:
                     return rule_class(parameters[0])
