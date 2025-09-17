@@ -1,0 +1,25 @@
+"""
+{{ class }} Model
+
+Generated model class for database operations.
+"""
+
+from larapy.database.orm import Model
+
+
+class {{ class }}(Model):
+    """{{ class }} Model"""
+
+    table = '{{ table }}'
+
+    fillable = [
+        # Add fillable fields here
+    ]
+
+    hidden = [
+        # Add hidden fields here
+    ]
+
+    casts = {
+        # Add field casts here
+    }

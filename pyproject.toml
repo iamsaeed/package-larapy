@@ -40,8 +40,8 @@ dev = [
     "mypy>=0.812",
 ]
 
-# [project.scripts]
-# larapy = "larapy.cli:main"
+[project.scripts]
+larapy = "larapy.console.application:main"
 
 [project.urls]
 Homepage = "https://github.com/yourusername/larapy"

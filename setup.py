@@ -43,9 +43,9 @@ setup(
             "mypy>=0.812",
         ],
     },
-    # entry_points={
-    #     "console_scripts": [
-    #         "larapy=larapy.cli:main",
-    #     ],
-    # },
+    entry_points={
+        "console_scripts": [
+            "larapy=larapy.console.application:main",
+        ],
+    },
 )
