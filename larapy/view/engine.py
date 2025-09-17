@@ -16,10 +16,13 @@ class ViewEngine:
         if app:
             self.init_app(app)
     
-    def init_app(self, app):
+    def init_app(self, app, base_path=None):
         """Initialize the view engine with Flask app"""
-        # Set template folder
-        template_folder = os.path.join(app.root_path, 'resources', 'views')
+        # Set template folder - use base_path if provided, otherwise fall back to app.root_path
+        if base_path:
+            template_folder = os.path.join(base_path, 'resources', 'views')
+        else:
+            template_folder = os.path.join(app.root_path, 'resources', 'views')
         app.template_folder = template_folder
         
         # Setup Larapy Jinja2 extensions (auth, guest, csrf, etc.)

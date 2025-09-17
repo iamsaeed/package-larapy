@@ -16,7 +16,7 @@ class Application(Container):
         self._base_path = base_path or os.getcwd()
         
         # Flask application instance
-        self._flask_app = Flask(__name__)
+        self._flask_app = Flask(__name__, template_folder=os.path.join(base_path or os.getcwd(), 'resources', 'views'))
         
         # Service providers
         self._service_providers: List[ServiceProvider] = []
