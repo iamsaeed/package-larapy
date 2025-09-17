@@ -44,9 +44,11 @@ class Application(Container):
         from ..providers.config_service_provider import ConfigServiceProvider
         from ..providers.auth_service_provider import AuthServiceProvider
         from ..providers.log_service_provider import LogServiceProvider
+        from ..providers.validation_service_provider import ValidationServiceProvider
 
         self.register(ConfigServiceProvider(self))
         self.register(LogServiceProvider(self))
+        self.register(ValidationServiceProvider(self))
         self.register(RoutingServiceProvider(self))
         self.register(AuthServiceProvider(self))
     
