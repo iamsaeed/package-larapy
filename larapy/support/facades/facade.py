@@ -57,6 +57,17 @@ class Facade:
         instance = self.get_facade_root()
         return getattr(instance, name)
 
+    def __class_getattr__(cls, name):
+        """Handle static method calls"""
+        try:
+            return object.__getattribute__(cls, name)
+        except AttributeError:
+            instance = cls.get_facade_root()
+            attr = getattr(instance, name)
+            if callable(attr):
+                return attr
+            return attr
+
 # Example Route Facade
 class Route(Facade):
     @classmethod

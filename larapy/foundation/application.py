@@ -43,8 +43,10 @@ class Application(Container):
         from ..providers.routing_service_provider import RoutingServiceProvider
         from ..providers.config_service_provider import ConfigServiceProvider
         from ..providers.auth_service_provider import AuthServiceProvider
-        
+        from ..providers.log_service_provider import LogServiceProvider
+
         self.register(ConfigServiceProvider(self))
+        self.register(LogServiceProvider(self))
         self.register(RoutingServiceProvider(self))
         self.register(AuthServiceProvider(self))
     
@@ -125,6 +127,11 @@ class Application(Container):
     def flask_app(self) -> Flask:
         """Get the Flask application instance"""
         return self._flask_app
+
+    @property
+    def config(self):
+        """Get the configuration repository"""
+        return self.resolve('config')
     
     def base_path(self, path: str = '') -> str:
         """Get the base path of the Laravel installation"""
