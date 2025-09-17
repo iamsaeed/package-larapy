@@ -129,10 +129,62 @@ class LarapyExtension(Extension):
 def setup_larapy_jinja(app):
     """Setup Larapy Jinja2 extensions for Flask app"""
     app.jinja_env.add_extension(LarapyExtension)
-    
+
     # Add some useful global functions
     app.jinja_env.globals.update({
         'csrf_token': lambda: LarapyExtension(app.jinja_env).csrf_token(),
         'auth_check': lambda: LarapyExtension(app.jinja_env).auth_check(),
         'is_guest': lambda: LarapyExtension(app.jinja_env).is_guest(),
     })
+
+    # Setup Vite helper
+    try:
+        from .vite import setup_vite_helper
+        setup_vite_helper(app)
+    except Exception as e:
+        # Fallback vite function if import fails
+        def vite_fallback(entries):
+            from markupsafe import Markup
+            import os
+
+            # Check if we have built assets - look in public/build directory
+            from pathlib import Path
+
+            # Get the current app's root directory (where app.py is located)
+            app_root = Path.cwd()
+            build_path = app_root / 'public' / 'build' / '.vite' / 'manifest.json'
+
+
+            if build_path.exists():
+                # Production mode - use manifest
+                import json
+                try:
+                    with open(build_path, 'r') as f:
+                        manifest = json.load(f)
+
+                    tags = []
+                    for entry in entries:
+                        if entry in manifest:
+                            asset_info = manifest[entry]
+                            file_path = f"/build/{asset_info['file']}"
+
+                            if entry.endswith('.css'):
+                                tags.append(f'<link href="{file_path}" rel="stylesheet">')
+                            elif entry.endswith('.js'):
+                                tags.append(f'<script src="{file_path}" type="module"></script>')
+
+                    if tags:  # Only return if we found assets
+                        return Markup('\n'.join(tags))
+                except Exception as e:
+                    pass
+
+            # Fallback - just reference files directly
+            tags = []
+            for entry in entries:
+                if entry.endswith('.css'):
+                    tags.append('<link href="https://cdn.tailwindcss.com" rel="stylesheet">')
+                elif entry.endswith('.js'):
+                    tags.append('<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>')
+            return Markup('\n'.join(tags))
+
+        app.jinja_env.globals['vite'] = vite_fallback
