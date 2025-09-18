@@ -31,18 +31,70 @@ class ConsoleKernel:
         except ImportError as e:
             print(f"Warning: Could not register make commands: {e}")
         
-        # Register database commands with simplified dependency handling
+        # Register all available database commands
         try:
-            # Only register if we can create basic dependencies
-            self._register_database_commands()
+            self._register_all_database_commands()
         except Exception as e:
             print(f"Warning: Database commands not available: {e}")
 
-    def _register_database_commands(self):
-        """Register database commands with proper dependencies"""
-        # For now, register simple versions that handle their own dependencies
-        self.register_command('migrate:status', self._create_status_command)
-        self.register_command('migrate:install', self._create_install_command)
+    def _register_all_database_commands(self):
+        """Register all available database commands"""
+        # Migration commands
+        try:
+            from ..database.console.migrate_command import MigrateCommand
+            self.register_command('migrate', lambda: MigrateCommand())
+        except Exception as e:
+            print(f"Warning: migrate command not available: {e}")
+        
+        try:
+            from ..database.console.migrate_status_command import MigrateStatusCommand
+            self.register_command('migrate:status', self._create_status_command)
+        except Exception as e:
+            print(f"Warning: migrate:status command not available: {e}")
+        
+        try:
+            from ..database.console.migrate_install_command import MigrateInstallCommand
+            self.register_command('migrate:install', self._create_install_command)
+        except Exception as e:
+            print(f"Warning: migrate:install command not available: {e}")
+        
+        try:
+            from ..database.console.migrate_refresh_command import MigrateRefreshCommand
+            self.register_command('migrate:refresh', lambda: MigrateRefreshCommand())
+        except Exception as e:
+            print(f"Warning: migrate:refresh command not available: {e}")
+        
+        try:
+            from ..database.console.migrate_reset_command import MigrateResetCommand
+            self.register_command('migrate:reset', lambda: MigrateResetCommand())
+        except Exception as e:
+            print(f"Warning: migrate:reset command not available: {e}")
+        
+        try:
+            from ..database.console.rollback_command import RollbackCommand
+            self.register_command('migrate:rollback', lambda: RollbackCommand())
+        except Exception as e:
+            print(f"Warning: migrate:rollback command not available: {e}")
+        
+        try:
+            from ..database.console.fresh_command import FreshCommand
+            self.register_command('migrate:fresh', lambda: FreshCommand())
+        except Exception as e:
+            print(f"Warning: migrate:fresh command not available: {e}")
+        
+        # Database seeding commands
+        try:
+            from ..database.console.seed_command import SeedCommand
+            self.register_command('db:seed', lambda: SeedCommand())
+        except Exception as e:
+            print(f"Warning: db:seed command not available: {e}")
+        
+        # Additional database commands
+        try:
+            from ..database.console.reset_command import ResetCommand
+            self.register_command('db:reset', lambda: ResetCommand())
+        except Exception as e:
+            print(f"Warning: db:reset command not available: {e}")
         
     def _create_status_command(self):
         """Create migrate:status command with error handling"""

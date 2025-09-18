@@ -16,6 +16,9 @@ class LarapyExtension(Extension):
     def __init__(self, environment):
         super().__init__(environment)
         environment.globals['csrf_token'] = self.csrf_token
+        environment.globals['csrf_field'] = self.csrf_field
+        environment.globals['csrf'] = self.csrf_field  # Alias
+        environment.globals['csrf_meta'] = self.csrf_meta
         environment.globals['auth_check'] = self.auth_check
         environment.globals['is_guest'] = self.is_guest
         environment.globals['get_error'] = self.get_error
@@ -97,9 +100,26 @@ class LarapyExtension(Extension):
     
     def csrf_token(self):
         """Generate or get CSRF token"""
-        if 'csrf_token' not in session:
-            session['csrf_token'] = secrets.token_hex(16)
-        return session['csrf_token']
+        try:
+            # Import and use the CSRF token service
+            from larapy.security.csrf_token_service import CSRFTokenService
+            service = CSRFTokenService()
+            return service.get_token()
+        except ImportError:
+            # Fallback to simple session-based token
+            if 'csrf_token' not in session:
+                session['csrf_token'] = secrets.token_hex(16)
+            return session['csrf_token']
+    
+    def csrf_field(self):
+        """Generate CSRF token field"""
+        token = self.csrf_token()
+        return Markup(f'<input type="hidden" name="_token" value="{token}">')
+    
+    def csrf_meta(self):
+        """Generate CSRF meta tag for AJAX"""
+        token = self.csrf_token()
+        return Markup(f'<meta name="csrf-token" content="{token}">')
     
     def auth_check(self):
         """Check if user is authenticated"""
