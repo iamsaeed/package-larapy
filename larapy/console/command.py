@@ -48,7 +48,19 @@ class Command(ABC):
 
     def option(self, name: str, default: Any = False) -> Any:
         """Get command option"""
-        # Simplified implementation for now
+        # Parse options from arguments
+        args = getattr(self, '_args', [])
+        
+        # Look for --option or --option=value patterns
+        for arg in args:
+            if arg.startswith('--'):
+                if arg == f'--{name}':
+                    # Boolean flag option
+                    return True
+                elif arg.startswith(f'--{name}='):
+                    # Option with value
+                    return arg.split('=', 1)[1]
+        
         return default
 
     def info(self, message: str):

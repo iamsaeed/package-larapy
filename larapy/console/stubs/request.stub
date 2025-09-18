@@ -1,0 +1,165 @@
+"""
+{{class_name}}
+
+Form request class for {{request_purpose}} validation and authorization.
+"""
+
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'package-larapy'))
+
+from larapy.http.form_request import FormRequest
+from typing import Dict, List, Any, Optional
+
+
+class {{class_name}}(FormRequest):
+    """
+    {{class_name}}
+    
+    Handles validation and authorization for {{request_purpose_lower}}.
+    """
+    
+    def authorize(self) -> bool:
+        """
+        Determine if the user is authorized to make this request
+        
+        Returns:
+            True if authorized, False otherwise
+        """
+        # Add your authorization logic here
+        # Example: Check if user is authenticated
+        # return self.user() is not None
+        
+        # Example: Check specific permissions
+        # return self.user() and self.user().can('{{permission_name}}')
+        
+        # Example: Check ownership
+        # resource_id = self.route('id')
+        # if resource_id:
+        #     resource = {{model_name}}.find(resource_id)
+        #     return resource and resource.user_id == self.user().id
+        
+        return True  # Allow all requests by default
+    
+    def rules(self) -> Dict[str, str]:
+        """
+        Get the validation rules that apply to the request
+        
+        Returns:
+            Dictionary of field names and their validation rules
+        """
+        # Define your validation rules here
+        rules = {
+            # Example rules:
+            # 'name': 'required|string|max:255',
+            # 'email': 'required|email|unique:users,email',
+            # 'password': 'required|string|min:8|confirmed',
+            # 'age': 'required|integer|min:18|max:120',
+            # 'phone': 'nullable|string|regex:/^[0-9+\-\s()]+$/',
+            # 'website': 'nullable|url',
+            # 'bio': 'nullable|string|max:1000',
+            # 'avatar': 'nullable|file|mimes:jpg,jpeg,png,gif|max:2048',
+            # 'tags': 'nullable|array',
+            # 'tags.*': 'string|max:50',
+        }
+        
+        # You can modify rules based on the request method
+        if self.is_method('PUT') or self.is_method('PATCH'):
+            # For updates, you might want to exclude current record from unique validation
+            # resource_id = self.route('id')
+            # rules['email'] = f'required|email|unique:users,email,{resource_id}'
+            pass
+        
+        return rules
+    
+    def messages(self) -> Dict[str, str]:
+        """
+        Get custom error messages for validation rules
+        
+        Returns:
+            Dictionary of custom error messages
+        """
+        return {
+            # Custom error messages
+            # 'name.required': 'The name field is required.',
+            # 'name.max': 'The name may not be greater than 255 characters.',
+            # 'email.required': 'The email field is required.',
+            # 'email.email': 'The email must be a valid email address.',
+            # 'email.unique': 'The email has already been taken.',
+            # 'password.required': 'The password field is required.',
+            # 'password.min': 'The password must be at least 8 characters.',
+            # 'password.confirmed': 'The password confirmation does not match.',
+            # 'age.min': 'You must be at least 18 years old.',
+            # 'avatar.mimes': 'The avatar must be a file of type: jpg, jpeg, png, gif.',
+            # 'avatar.max': 'The avatar may not be greater than 2048 kilobytes.',
+        }
+    
+    def attributes(self) -> Dict[str, str]:
+        """
+        Get custom attribute names for validation errors
+        
+        Returns:
+            Dictionary of custom attribute names
+        """
+        return {
+            # Custom attribute names for error messages
+            # 'email': 'email address',
+            # 'phone': 'phone number',
+            # 'dob': 'date of birth',
+        }
+    
+    def prepare_for_validation(self) -> None:
+        """
+        Prepare the data for validation
+        
+        This method is called before validation occurs.
+        You can modify the request data here.
+        """
+        # Example: Normalize phone number
+        # if self.has('phone'):
+        #     phone = self.input('phone')
+        #     normalized_phone = re.sub(r'[^\d+]', '', phone)
+        #     self.merge({'phone': normalized_phone})
+        
+        # Example: Convert strings to proper case
+        # if self.has('name'):
+        #     name = self.input('name')
+        #     self.merge({'name': name.title()})
+        
+        # Example: Remove extra whitespace
+        # data = {}
+        # for key, value in self.all().items():
+        #     if isinstance(value, str):
+        #         data[key] = value.strip()
+        # self.merge(data)
+        
+        pass
+    
+    def with_validator(self, validator) -> None:
+        """
+        Configure the validator instance
+        
+        Args:
+            validator: The validator instance
+        """
+        # Add custom validation logic here
+        # Example: Add conditional validation
+        # validator.sometimes('password', 'required|min:8', lambda: self.is_method('POST'))
+        
+        # Example: Add custom validation rules
+        # validator.add_custom_rule('custom_rule', self.validate_custom_rule)
+        
+        pass
+    
+    def validate_custom_rule(self, value: Any) -> bool:
+        """
+        Example custom validation rule
+        
+        Args:
+            value: The value to validate
+            
+        Returns:
+            True if valid, False otherwise
+        """
+        # Add your custom validation logic here
+        return True

@@ -1,0 +1,135 @@
+"""
+{{class_name}}
+
+Service provider for {{service_name}}.
+"""
+
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'package-larapy'))
+
+from larapy.foundation.service_provider import ServiceProvider
+from larapy.container.container import Container
+
+
+class {{class_name}}(ServiceProvider):
+    """
+    {{class_name}}
+    
+    Service provider for {{service_name_lower}} services.
+    """
+    
+    def __init__(self, app: Container):
+        """
+        Initialize the service provider
+        
+        Args:
+            app: The application container
+        """
+        super().__init__(app)
+    
+    def register(self) -> None:
+        """
+        Register services into the container
+        
+        This method is called during the application bootstrapping process.
+        Use this method to bind services into the container.
+        """
+        # Register your services here
+        # Example: Bind a service to the container
+        # self.app.bind('{{service_name_lower}}.service', lambda: {{service_name}}Service())
+        
+        # Example: Bind a singleton service
+        # self.app.singleton('{{service_name_lower}}.manager', lambda: {{service_name}}Manager())
+        
+        # Example: Bind an interface to implementation
+        # self.app.bind('{{service_name}}Interface', '{{service_name}}Implementation')
+        
+        # Example: Register configuration
+        # self.app.instance('{{service_name_lower}}.config', {
+        #     'api_key': os.getenv('{{service_name_upper}}_API_KEY'),
+        #     'endpoint': os.getenv('{{service_name_upper}}_ENDPOINT', 'https://api.example.com'),
+        #     'timeout': int(os.getenv('{{service_name_upper}}_TIMEOUT', '30')),
+        # })
+        
+        pass
+    
+    def boot(self) -> None:
+        """
+        Bootstrap services after all providers have been registered
+        
+        This method is called after all service providers have been registered.
+        Use this method to perform actions that depend on other services.
+        """
+        # Bootstrap your services here
+        # Example: Set up event listeners
+        # event_dispatcher = self.app.make('events')
+        # event_dispatcher.listen('{{service_name_lower}}.event', self.handle_event)
+        
+        # Example: Register middleware
+        # router = self.app.make('router')
+        # router.middleware('{{service_name_lower}}', '{{service_name}}Middleware')
+        
+        # Example: Publish configuration files
+        # self.publishes({
+        #     os.path.join(os.path.dirname(__file__), 'config', '{{service_name_lower}}.py'): 'config/{{service_name_lower}}.py'
+        # }, '{{service_name_lower}}-config')
+        
+        # Example: Load routes
+        # self.load_routes_from(os.path.join(os.path.dirname(__file__), 'routes', '{{service_name_lower}}.py'))
+        
+        # Example: Register console commands
+        # if self.app.running_in_console():
+        #     self.commands([
+        #         '{{service_name}}Command',
+        #     ])
+        
+        pass
+    
+    def provides(self) -> list:
+        """
+        Get the services provided by the provider
+        
+        Returns:
+            List of service names provided by this provider
+        """
+        return [
+            # List the services this provider provides
+            # '{{service_name_lower}}.service',
+            # '{{service_name_lower}}.manager',
+            # '{{service_name}}Interface',
+        ]
+    
+    def when(self) -> list:
+        """
+        Get the events that trigger this service provider to register
+        
+        Returns:
+            List of events that should trigger registration
+        """
+        return [
+            # List events that should trigger this provider
+            # '{{service_name_lower}}.needed',
+        ]
+    
+    # Helper methods
+    def handle_event(self, event_data):
+        """
+        Handle {{service_name_lower}} events
+        
+        Args:
+            event_data: The event data
+        """
+        # Handle the event
+        pass
+    
+    def load_routes_from(self, path: str) -> None:
+        """
+        Load routes from a file
+        
+        Args:
+            path: Path to the routes file
+        """
+        if os.path.exists(path):
+            # Load and register routes from the file
+            pass

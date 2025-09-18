@@ -14,6 +14,7 @@ class ConsoleKernel:
         self.app = app
         self.commands = {}
         self.register_default_commands()
+        self.register_application_commands()
 
     def register_default_commands(self):
         """Register default framework commands"""
@@ -30,6 +31,42 @@ class ConsoleKernel:
             
         except ImportError as e:
             print(f"Warning: Could not register make commands: {e}")
+        
+        # Register general make commands
+        try:
+            from .commands.make_model_command import MakeModelCommand
+            from .commands.make_controller_command import MakeControllerCommand
+            from .commands.make_middleware_command import MakeMiddlewareCommand
+            from .commands.make_provider_command import MakeProviderCommand
+            from .commands.serve_command import ServeCommand
+            from .commands.route_list_command import RouteListCommand
+            from .commands.make_request_command import MakeRequestCommand
+            from .commands.make_command_command import MakeCommandCommand
+            from .commands.make_test_command import MakeTestCommand
+            from .commands.config_show_command import ConfigShowCommand
+            from .commands.make_rule_command import MakeRuleCommand
+            from .commands.make_observer_command import MakeObserverCommand
+            
+            # Phase 1 commands
+            self.register_command('make:model', lambda: MakeModelCommand())
+            self.register_command('make:controller', lambda: MakeControllerCommand())
+            self.register_command('make:middleware', lambda: MakeMiddlewareCommand())
+            self.register_command('make:provider', lambda: MakeProviderCommand())
+            self.register_command('serve', lambda: ServeCommand())
+            
+            # Phase 2 commands
+            self.register_command('route:list', lambda: RouteListCommand())
+            self.register_command('make:request', lambda: MakeRequestCommand())
+            self.register_command('make:command', lambda: MakeCommandCommand())
+            self.register_command('make:test', lambda: MakeTestCommand())
+            self.register_command('config:show', lambda: ConfigShowCommand())
+            
+            # Phase 3 commands
+            self.register_command('make:rule', lambda: MakeRuleCommand())
+            self.register_command('make:observer', lambda: MakeObserverCommand())
+            
+        except ImportError as e:
+            print(f"Warning: Could not register general commands: {e}")
         
         # Register all available database commands
         try:
@@ -166,9 +203,15 @@ class ConsoleKernel:
             return 0
         
         if command_name not in self.commands:
-            print(f"Command '{command_name}' not found.")
-            self.show_available_commands()
-            return 1
+            # Check for prefix matches
+            prefix_matches = self.find_prefix_matches(command_name)
+            if prefix_matches:
+                self.show_prefix_matches(command_name, prefix_matches)
+                return 1
+            else:
+                print(f"Command '{command_name}' not found.")
+                self.show_available_commands()
+                return 1
         
         try:
             command_factory = self.commands[command_name]
@@ -184,6 +227,46 @@ class ConsoleKernel:
         except Exception as e:
             print(f"Error executing command '{command_name}': {e}")
             return 1
+
+    def find_prefix_matches(self, prefix: str) -> List[str]:
+        """Find commands that start with the given prefix"""
+        matches = []
+        prefix_with_colon = prefix + ':'
+        
+        for command_name in self.commands.keys():
+            if command_name.startswith(prefix_with_colon):
+                matches.append(command_name)
+        
+        return sorted(matches)
+
+    def show_prefix_matches(self, prefix: str, matches: List[str]):
+        """Show available commands for a given prefix"""
+        print(f"Command '{prefix}' not found.")
+        print(f"\n✨ Did you mean one of these commands with '{prefix}:' prefix?")
+        print("=" * 70)
+        
+        for command_name in matches:
+            try:
+                # Get command description
+                command_factory = self.commands[command_name]
+                if callable(command_factory) and not hasattr(command_factory, 'handle'):
+                    command = command_factory()
+                else:
+                    command = command_factory()
+                
+                description = getattr(command, 'description', 'No description available')
+                print(f"  📝 {command_name:<20} {description}")
+                
+            except Exception:
+                print(f"  📝 {command_name:<20} Available command")
+        
+        print(f"\n💡 Usage:")
+        print(f"   larapy <command> [arguments] [options]")
+        print(f"\n🚀 Example:")
+        if matches:
+            print(f"   larapy {matches[0]}")
+        
+        print(f"\n💭 Tip: Use 'larapy --help' to see all available commands.")
 
     def show_help(self):
         """Show help information"""
@@ -207,6 +290,7 @@ class ConsoleKernel:
             'make': [],
             'migrate': [],
             'db': [],
+            'app': [],
             'other': []
         }
         
@@ -217,6 +301,8 @@ class ConsoleKernel:
                 categories['migrate'].append(command_name)
             elif command_name.startswith('db:'):
                 categories['db'].append(command_name)
+            elif command_name.startswith('app:'):
+                categories['app'].append(command_name)
             else:
                 categories['other'].append(command_name)
         
@@ -243,3 +329,59 @@ class ConsoleKernel:
                 args.append(str(value))
         
         return self.handle(args)
+
+    def register_application_commands(self):
+        """Auto-discover and register custom commands from app/console/commands/"""
+        try:
+            commands_dir = "app/console/commands"
+            if not os.path.exists(commands_dir):
+                return
+            
+            # Add current directory to Python path for importing
+            current_dir = os.getcwd()
+            if current_dir not in sys.path:
+                sys.path.insert(0, current_dir)
+            
+            # Scan for Python files in the commands directory
+            for file_name in os.listdir(commands_dir):
+                if file_name.endswith('.py') and file_name != '__init__.py':
+                    try:
+                        # Import the module
+                        module_name = f"app.console.commands.{file_name[:-3]}"
+                        module = __import__(module_name, fromlist=[''])
+                        
+                        # Find command classes in the module
+                        for attr_name in dir(module):
+                            attr = getattr(module, attr_name)
+                            
+                            # Check if it's a command class (inherits from Command and not the base Command)
+                            if (isinstance(attr, type) and 
+                                hasattr(attr, 'signature') and 
+                                hasattr(attr, 'handle') and
+                                attr_name != 'Command'):
+                                
+                                try:
+                                    # Create an instance to get the command name
+                                    instance = attr()
+                                    
+                                    # Get command name from signature or get_name method
+                                    if hasattr(instance, 'get_name'):
+                                        command_name = instance.get_name()
+                                    elif hasattr(instance, 'signature'):
+                                        # Extract command name from signature
+                                        signature = instance.signature
+                                        command_name = signature.split()[0] if signature else attr_name.lower()
+                                    else:
+                                        command_name = attr_name.lower()
+                                    
+                                    # Register the command
+                                    self.register_command(command_name, lambda cls=attr: cls())
+                                    
+                                except Exception as e:
+                                    print(f"Warning: Could not register command {attr_name}: {e}")
+                                    
+                    except Exception as e:
+                        print(f"Warning: Could not import command file {file_name}: {e}")
+                        
+        except Exception as e:
+            print(f"Warning: Could not scan for application commands: {e}")

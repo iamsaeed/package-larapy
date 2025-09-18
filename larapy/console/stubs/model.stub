@@ -1,0 +1,95 @@
+"""
+{{class_name}}
+
+Eloquent model class for {{table_name}} table.
+"""
+
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'package-larapy'))
+
+from larapy.database.eloquent.model import Model
+
+
+class {{class_name}}(Model):
+    """
+    {{class_name}} Model
+    
+    Represents a {{table_name}} record in the database.
+    """
+    
+    # Table name (if different from class name)
+    table = "{{table_name}}"
+    
+    # Primary key column name
+    primary_key = "id"
+    
+    # Attributes that are mass assignable
+    fillable = [
+        # Add your fillable attributes here
+        # 'name',
+        # 'email',
+    ]
+    
+    # Attributes that should be hidden for serialization
+    hidden = [
+        # Add your hidden attributes here
+        # 'password',
+        # 'remember_token',
+    ]
+    
+    # Attributes that should be cast to native types
+    casts = {
+        # Add your attribute casts here
+        # 'email_verified_at': 'datetime',
+        # 'is_active': 'boolean',
+    }
+    
+    # Disable timestamps if not needed
+    # timestamps = False
+    
+    # Custom timestamp column names
+    # created_at = 'created_on'
+    # updated_at = 'updated_on'
+    
+    def __init__(self, **attributes):
+        """Initialize the model with attributes"""
+        super().__init__(**attributes)
+    
+    # Define relationships here
+    # Example: One-to-many relationship
+    # def posts(self):
+    #     """Get all posts for this user"""
+    #     return self.has_many('Post', 'user_id')
+    
+    # Example: Many-to-many relationship
+    # def roles(self):
+    #     """Get all roles for this user"""
+    #     return self.belongs_to_many('Role', 'user_roles', 'user_id', 'role_id')
+    
+    # Define accessors and mutators here
+    # Example: Accessor
+    # def get_full_name_attribute(self):
+    #     """Get the user's full name"""
+    #     return f"{self.first_name} {self.last_name}"
+    
+    # Example: Mutator
+    # def set_password_attribute(self, value):
+    #     """Hash the password when setting"""
+    #     import hashlib
+    #     self.attributes['password'] = hashlib.sha256(value.encode()).hexdigest()
+    
+    # Define scopes here
+    # Example: Local scope
+    # def scope_active(self, query):
+    #     """Scope to only include active records"""
+    #     return query.where('is_active', True)
+    
+    # Define model events here
+    # def saving(self):
+    #     """Called before saving the model"""
+    #     pass
+    
+    # def saved(self):
+    #     """Called after saving the model"""
+    #     pass

@@ -1,0 +1,178 @@
+"""
+{{class_name}}
+
+HTTP controller for handling {{resource_name}} requests.
+"""
+
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'package-larapy'))
+
+from larapy.http.controller import Controller
+from larapy.http.response import Response
+from larapy.http.request import Request
+
+
+class {{class_name}}(Controller):
+    """
+    {{class_name}}
+    
+    Handles HTTP requests for {{resource_name}} operations.
+    """
+    
+    def __init__(self):
+        """Initialize the controller"""
+        super().__init__()
+    
+    def index(self, request: Request) -> Response:
+        """
+        Display a listing of the resource
+        
+        Args:
+            request: HTTP request object
+            
+        Returns:
+            HTTP response
+        """
+        # Retrieve all {{resource_name}} records
+        # {{resource_name_lower}} = {{model_name}}.all()
+        
+        # Return view with data
+        # return self.view('{{resource_name_lower}}.index', {'{{resource_name_lower}}': {{resource_name_lower}}})
+        
+        return Response({'message': 'List of {{resource_name_lower}}'})
+    
+    def show(self, request: Request, id: str) -> Response:
+        """
+        Display the specified resource
+        
+        Args:
+            request: HTTP request object
+            id: Resource identifier
+            
+        Returns:
+            HTTP response
+        """
+        # Find the specific {{resource_name_singular}}
+        # {{resource_name_singular_lower}} = {{model_name}}.find(id)
+        # if not {{resource_name_singular_lower}}:
+        #     return self.abort(404)
+        
+        # Return view with data
+        # return self.view('{{resource_name_lower}}.show', {'{{resource_name_singular_lower}}': {{resource_name_singular_lower}}})
+        
+        return Response({'message': f'Show {{resource_name_singular_lower}} {id}'})
+    
+    def create(self, request: Request) -> Response:
+        """
+        Show the form for creating a new resource
+        
+        Args:
+            request: HTTP request object
+            
+        Returns:
+            HTTP response
+        """
+        # Return create form view
+        # return self.view('{{resource_name_lower}}.create')
+        
+        return Response({'message': 'Create {{resource_name_singular_lower}} form'})
+    
+    def store(self, request: Request) -> Response:
+        """
+        Store a newly created resource in storage
+        
+        Args:
+            request: HTTP request object
+            
+        Returns:
+            HTTP response
+        """
+        # Validate request data
+        # validated_data = request.validate({
+        #     'name': 'required|string|max:255',
+        #     'email': 'required|email|unique:{{table_name}},email',
+        # })
+        
+        # Create new {{resource_name_singular}}
+        # {{resource_name_singular_lower}} = {{model_name}}.create(validated_data)
+        
+        # Redirect to show page
+        # return self.redirect(f'/{{resource_name_lower}}/{{{resource_name_singular_lower}}.id}}')
+        
+        return Response({'message': '{{resource_name_singular}} created successfully'}, 201)
+    
+    def edit(self, request: Request, id: str) -> Response:
+        """
+        Show the form for editing the specified resource
+        
+        Args:
+            request: HTTP request object
+            id: Resource identifier
+            
+        Returns:
+            HTTP response
+        """
+        # Find the specific {{resource_name_singular}}
+        # {{resource_name_singular_lower}} = {{model_name}}.find(id)
+        # if not {{resource_name_singular_lower}}:
+        #     return self.abort(404)
+        
+        # Return edit form view
+        # return self.view('{{resource_name_lower}}.edit', {'{{resource_name_singular_lower}}': {{resource_name_singular_lower}}})
+        
+        return Response({'message': f'Edit {{resource_name_singular_lower}} {id} form'})
+    
+    def update(self, request: Request, id: str) -> Response:
+        """
+        Update the specified resource in storage
+        
+        Args:
+            request: HTTP request object
+            id: Resource identifier
+            
+        Returns:
+            HTTP response
+        """
+        # Find the specific {{resource_name_singular}}
+        # {{resource_name_singular_lower}} = {{model_name}}.find(id)
+        # if not {{resource_name_singular_lower}}:
+        #     return self.abort(404)
+        
+        # Validate request data
+        # validated_data = request.validate({
+        #     'name': 'required|string|max:255',
+        #     'email': f'required|email|unique:{{table_name}},email,{id}',
+        # })
+        
+        # Update {{resource_name_singular}}
+        # {{resource_name_singular_lower}}.update(validated_data)
+        
+        # Redirect to show page
+        # return self.redirect(f'/{{resource_name_lower}}/{id}')
+        
+        return Response({'message': f'{{resource_name_singular}} {id} updated successfully'})
+    
+    def destroy(self, request: Request, id: str) -> Response:
+        """
+        Remove the specified resource from storage
+        
+        Args:
+            request: HTTP request object
+            id: Resource identifier
+            
+        Returns:
+            HTTP response
+        """
+        # Find the specific {{resource_name_singular}}
+        # {{resource_name_singular_lower}} = {{model_name}}.find(id)
+        # if not {{resource_name_singular_lower}}:
+        #     return self.abort(404)
+        
+        # Delete {{resource_name_singular}}
+        # {{resource_name_singular_lower}}.delete()
+        
+        # Redirect to index page
+        # return self.redirect('/{{resource_name_lower}}')
+        
+        return Response({'message': f'{{resource_name_singular}} {id} deleted successfully'})
