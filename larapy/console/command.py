@@ -23,9 +23,27 @@ class Command(ABC):
         """Execute the command"""
         pass
 
+    def run(self, args: List[str] = None) -> int:
+        """Run the command with arguments"""
+        # Store arguments for later use
+        self._args = args or []
+        
+        # Execute the handle method
+        try:
+            result = self.handle()
+            return result if isinstance(result, int) else 0
+        except Exception as e:
+            print(f"Command error: {e}")
+            return 1
+
     def argument(self, name: str, default: Any = None) -> Any:
         """Get command argument"""
-        # Simplified implementation for now
+        # Simple argument parsing - first argument is position 0, etc.
+        args = getattr(self, '_args', [])
+        
+        if name == 'name' and len(args) > 0:
+            return args[0]
+        
         return default
 
     def option(self, name: str, default: Any = False) -> Any:
@@ -48,3 +66,16 @@ class Command(ABC):
     def line(self, message: str):
         """Print a line"""
         print(message)
+
+    def comment(self, message: str):
+        """Print a comment"""
+        print(f"# {message}")
+
+    def ask(self, question: str) -> str:
+        """Ask user for input"""
+        return input(f"{question}: ")
+
+    def confirm(self, question: str) -> bool:
+        """Ask user for confirmation"""
+        answer = input(f"{question} (y/N): ").lower()
+        return answer in ['y', 'yes']

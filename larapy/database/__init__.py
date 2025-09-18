@@ -17,7 +17,7 @@ from .schema.blueprint import Blueprint
 # Migrations
 from .migrations.migration import Migration
 from .migrations.migrator import Migrator
-from .migrations.repository import DatabaseMigrationRepository
+from .migrations.repository import MigrationRepository
 from .migrations.creator import MigrationCreator
 
 # Eloquent ORM
@@ -53,7 +53,7 @@ __all__ = [
     'SchemaBuilder', 'Blueprint',
     
     # Migrations
-    'Migration', 'Migrator', 'DatabaseMigrationRepository', 'MigrationCreator',
+    'Migration', 'Migrator', 'MigrationRepository', 'MigrationCreator',
     
     # Eloquent
     'Model', 'EloquentBuilder',
